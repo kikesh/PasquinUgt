@@ -66,6 +66,7 @@ Base funcional con Next.js + Prisma para gestionar ejemplares, editor por bloque
 - **Vercel:** frontend + API routes.
 - **Railway/Supabase:** PostgreSQL gestionado.
 - Variables: `DATABASE_URL`, `JWT_SECRET`.
+- En Vercel, el build ejecuta `prisma generate` automáticamente (`build`/`vercel-build`) para evitar el error de Prisma Client desactualizado.
 - Para Puppeteer en serverless, considerar build con Chromium compatible (o job worker dedicado).
 
 ## Próximos pasos de escalabilidad

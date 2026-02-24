@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  editor
+}
+
+enum IssueStatus {
+  draft
+  review
+  published
+}
+
+enum Periodicity {
+  weekly
+  biweekly
+}
+
+enum Visibility {
+  public
+  unlisted
+  private
+}
+
+enum PuzzleType {
+  quiz
+  route
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(editor)
+  approvals Approval[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Issue {
+  id               String      @id @default(cuid())
+  title            String
+  theme            String?
+  coverImage       String?
+  periodicity      Periodicity @default(weekly)
+  status           IssueStatus @default(draft)
+  publicSlug       String      @unique
+  visibility       Visibility  @default(unlisted)
+  allowPdfDownload Boolean     @default(false)
+  pdfUrl           String?
+  publishedAt      DateTime?
+  pages            Page[]
+  references       Reference[]
+  approvals        Approval[]
+  versions         IssueVersion[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Page {
+  id        String  @id @default(cuid())
+  issueId   String
+  issue     Issue   @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  order     Int
+  template  String
+  blocks    Block[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Block {
+  id        String  @id @default(cuid())
+  pageId    String
+  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type      String
+  content   Json
+  order     Int
+  comic     Comic?
+  puzzle    Puzzle?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comic {
+  id        String @id @default(cuid())
+  blockId   String @unique
+  block     Block  @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Puzzle {
+  id        String     @id @default(cuid())
+  blockId   String     @unique
+  block     Block      @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  type      PuzzleType
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  type      String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reference {
+  id          String   @id @default(cuid())
+  issueId      String
+  issue        Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  description String
+  source      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Approval {
+  id         String   @id @default(cuid())
+  issueId    String
+  issue      Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  approvedBy String
+  approver   User     @relation(fields: [approvedBy], references: [id])
+  approvedAt DateTime
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model IssueVersion {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  snapshot  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
